@@ -110,7 +110,7 @@ func updateOrderbookSide(oldSide []models.BookLevel, updateSide []models.BookLev
 }
 
 func zeroSize(entry models.BookLevel) bool {
-	size, _ := new(big.Float).SetString(entry.Size)
+	size, _ := new(big.Float).SetString(entry.Amount)
 	return size.Cmp(new(big.Float)) == 0
 }
 

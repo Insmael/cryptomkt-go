@@ -57,7 +57,7 @@ func TestLoadTransactions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	transactions, err := client.LoadTransactions(context.Background(), args.Limit(3), args.Sort(args.SortTypeASC))
+	transactions, err := client.LoadTransactions(context.Background(), args.Limit(3), args.Sort(args.SortASC))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +75,7 @@ func TestTransactionsSubscription(t *testing.T) {
 	bg := context.Background()
 	apiKeys := LoadKeys()
 	client, _ := NewAccountClient(apiKeys.APIKey, apiKeys.APISecret)
-	restClient := rest.NewClient(apiKeys.APIKey, apiKeys.APISecret)
+	restClient := rest.NewClient(apiKeys.APIKey, apiKeys.APISecret, 0)
 	feedCh, err := client.SubscribeToTransactions()
 	if err != nil {
 		t.Fatal(err)
@@ -95,13 +95,25 @@ func TestTransactionsSubscription(t *testing.T) {
 		t.Fatal(err)
 	case <-time.After(5 * time.Second):
 	}
-	restClient.TransferMoneyFromTradingToAccountBalance(bg, args.Amount("0.2"), args.Currency("EOS"))
+	restClient.TransferBetweenWalletAndExchange(
+		bg,
+		args.Amount("0.2"),
+		args.Currency("EOS"),
+		args.Source(args.AccountSpot),
+		args.Destination(args.AccountWallet),
+	)
 	select {
 	case err := <-innerErrCh:
 		t.Fatal(err)
 	case <-time.After(5 * time.Second):
 	}
-	restClient.TransferMoneyFromAccountToTradingBalance(bg, args.Amount("0.2"), args.Currency("EOS"))
+	restClient.TransferBetweenWalletAndExchange(
+		bg,
+		args.Amount("0.2"),
+		args.Currency("EOS"),
+		args.Source(args.AccountWallet),
+		args.Destination(args.AccountSpot),
+	)
 	select {
 	case err := <-innerErrCh:
 		t.Fatal(err)
@@ -115,7 +127,7 @@ func TestBalanceSubscription(t *testing.T) {
 	bg := context.Background()
 	apiKeys := LoadKeys()
 	client, _ := NewAccountClient(apiKeys.APIKey, apiKeys.APISecret)
-	restClient := rest.NewClient(apiKeys.APIKey, apiKeys.APISecret)
+	restClient := rest.NewClient(apiKeys.APIKey, apiKeys.APISecret, 0)
 	feedCh, err := client.SubscribeToBalance()
 	if err != nil {
 		t.Fatal(err)
@@ -139,13 +151,25 @@ func TestBalanceSubscription(t *testing.T) {
 		t.Fatal(err)
 	case <-time.After(5 * time.Second):
 	}
-	restClient.TransferMoneyFromTradingToAccountBalance(bg, args.Amount("0.2"), args.Currency("EOS"))
+	restClient.TransferBetweenWalletAndExchange(
+		bg,
+		args.Amount("0.2"),
+		args.Currency("EOS"),
+		args.Source(args.AccountSpot),
+		args.Destination(args.AccountWallet),
+	)
 	select {
 	case err := <-innerErrCh:
 		t.Fatal(err)
 	case <-time.After(5 * time.Second):
 	}
-	restClient.TransferMoneyFromAccountToTradingBalance(bg, args.Amount("0.2"), args.Currency("EOS"))
+	restClient.TransferBetweenWalletAndExchange(
+		bg,
+		args.Amount("0.2"),
+		args.Currency("EOS"),
+		args.Source(args.AccountSpot),
+		args.Destination(args.AccountWallet),
+	)
 	select {
 	case err := <-innerErrCh:
 		t.Fatal(err)

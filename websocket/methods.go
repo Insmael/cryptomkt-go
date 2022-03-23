@@ -108,7 +108,7 @@ func buildKey(method, symbol, period string) string {
 		key = methodKey + "::"
 	} else {
 		if methodKey == candles && period == "" { // default period
-			period = string(args.PeriodType30Minutes)
+			period = string(args.Period30Minutes)
 		}
 		key = methodKey + ":" + symbol + ":" + period
 	}

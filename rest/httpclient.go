@@ -19,7 +19,7 @@ import (
 
 var (
 	apiURL     = "https://api.exchange.cryptomkt.com"
-	apiVersion = "/api/2/"
+	apiVersion = "/api/3/"
 )
 
 // httpclient handles all the http logic, leaving public only whats needed.
@@ -29,14 +29,16 @@ type httpclient struct {
 	client    *http.Client
 	apiKey    string
 	apiSecret string
+	window    int
 }
 
 // New creates a new httpclient
-func newHTTPClient(apiKey, apiSecret string) httpclient {
+func newHTTPClient(apiKey, apiSecret string, window int) httpclient {
 	return httpclient{
 		client:    &http.Client{},
 		apiKey:    apiKey,
 		apiSecret: apiSecret,
+		window:    window,
 	}
 }
 
@@ -76,18 +78,26 @@ func (hclient httpclient) doRequest(cxt context.Context, method, endpoint string
 }
 
 func (hclient httpclient) buildCredential(httpMethod, method, query string) string {
-	timestamp := strconv.FormatInt(time.Now().Unix(), 10)
-	msg := httpMethod + timestamp + apiVersion + method
+	timestamp := strconv.FormatInt(time.Now().Unix()*1000, 10)
+	msg := httpMethod + apiVersion + method
 	if len(query) != 0 {
 		if httpMethod == methodGet {
 			msg += "?"
 		}
 		msg += query
 	}
+	msg += timestamp
+	if hclient.window != 0 {
+		msg += strconv.FormatInt(int64(hclient.window), 10)
+	}
 	h := hmac.New(sha256.New, []byte(hclient.apiSecret))
 	h.Write([]byte(msg))
 	signature := hex.EncodeToString(h.Sum(nil))
-	return "HS256 " + base64.StdEncoding.EncodeToString([]byte(hclient.apiKey+":"+timestamp+":"+signature))
+	str := hclient.apiKey + ":" + signature + ":" + timestamp
+	if hclient.window != 0 {
+		str += (":" + strconv.FormatInt(int64(hclient.window), 10))
+	}
+	return "HS256 " + base64.StdEncoding.EncodeToString([]byte(str))
 }
 
 func buildQuery(params map[string]interface{}) string {
@@ -116,6 +126,8 @@ func buildQuery(params map[string]interface{}) string {
 		case args.SortType:
 			query.Add(key, string(v))
 		case args.TimeInForceType:
+			query.Add(key, string(v))
+		case args.AccountType:
 			query.Add(key, string(v))
 		}
 	}

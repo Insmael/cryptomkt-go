@@ -3,8 +3,6 @@ package websocket
 import (
 	"context"
 	"testing"
-
-	"github.com/cryptomarket/cryptomarket-go/args"
 )
 
 func TestClientConcurrency(t *testing.T) {
@@ -19,22 +17,22 @@ func TestClientConcurrency(t *testing.T) {
 	}
 	errCh := make(chan error)
 	done := make(chan struct{})
-	for _, currency := range result[:5] {
-		go func(client *PublicClient, id string) {
-			defer func() {
-				done <- struct{}{}
-			}()
-			resp, err := client.GetCurrency(bg, args.Currency(id))
-			if err != nil {
-				errCh <- err
-				return
-			}
-			if err = checkCurrency(resp); err != nil {
-				errCh <- err
-				return
-			}
-		}(client, currency.ID)
-	}
+	// for _, currency := range result[:5] {
+	// 	go func(client *PublicClient, id string) {
+	// 		defer func() {
+	// 			done <- struct{}{}
+	// 		}()
+	// 		resp, err := client.GetCurrency(bg, args.Currency(id))
+	// 		if err != nil {
+	// 			errCh <- err
+	// 			return
+	// 		}
+	// 		if err = checkCurrency(resp); err != nil {
+	// 			errCh <- err
+	// 			return
+	// 		}
+	// 	}(client, currency.ID)
+	// }
 	go func() {
 		for range result[:5] {
 			<-done

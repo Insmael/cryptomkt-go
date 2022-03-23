@@ -91,16 +91,10 @@ func checkNoNil(field interface{}, name string) error {
 
 func checkCurrency(model *models.Currency) (err error) {
 	fields := map[string]interface{}{
-		"id":                 model.ID,
-		"fullName":           model.FullName,
-		"crypto":             model.Crypto,
-		"payinEnabled":       model.PayinEnabled,
-		"payinPaymentId":     model.PayinPaymentID,
-		"payinConfirmations": model.PayinConfirmations,
-		"payoutEnabled":      model.PayoutEnabled,
-		"payoutIsPaymentId":  model.PayinPaymentID,
-		"transferEnabled":    model.TransferEnabled,
-		"delisted":           model.Delisted,
+		"fullName":        model.FullName,
+		"payinEnabled":    model.PayinEnabled,
+		"payoutEnabled":   model.PayoutEnabled,
+		"transferEnabled": model.TransferEnabled,
 	}
 	for name, field := range fields {
 		err = checkNoNil(field, name)
@@ -113,13 +107,11 @@ func checkCurrency(model *models.Currency) (err error) {
 
 func checkSymbol(model *models.Symbol) (err error) {
 	fields := map[string]interface{}{
-		"id":                 model.ID,
 		"clientOrderID":      model.BaseCurrency,
 		"quote currency":     model.QuoteCurrency,
 		"fee currency":       model.FeeCurrency,
 		"quantity increment": model.QuantityIncrement,
 		"tick size":          model.TickSize,
-		"liquidity rate":     model.TakeLiquidityRate,
 	}
 	for name, field := range fields {
 		err = checkNoNil(field, name)
@@ -132,7 +124,6 @@ func checkSymbol(model *models.Symbol) (err error) {
 
 func checkTicker(model *models.Ticker) (err error) {
 	fields := map[string]interface{}{
-		"symbol":      model.Symbol,
 		"ask":         model.Ask,
 		"bid":         model.Bid,
 		"last":        model.Last,
@@ -172,14 +163,14 @@ func checkPublicTrade(model *models.PublicTrade) (err error) {
 func checkBookLevel(model *models.BookLevel) (err error) {
 	fields := map[string]interface{}{
 		"price": model.Price,
-		"size":  model.Size,
+		"size":  model.Amount,
 	}
 	for name, field := range fields {
 		if err = checkNoNil(field, name); err != nil {
 			return err
 		}
 	}
-	size, _ := new(big.Float).SetString(model.Size)
+	size, _ := new(big.Float).SetString(model.Amount)
 	zero, _ := new(big.Float).SetString("0.00")
 	if size.Cmp(zero) == 0 {
 		fmt.Println(model)
@@ -190,7 +181,6 @@ func checkBookLevel(model *models.BookLevel) (err error) {
 
 func checkOrderbook(model *models.OrderBook) (err error) {
 	fields := map[string]interface{}{
-		"symbol":    model.Symbol,
 		"timestamp": model.Timestamp,
 		"ask":       model.Ask,
 		"bid":       model.Bid,
@@ -248,7 +238,7 @@ func checkBalance(model *models.Balance) (err error) {
 	return nil
 }
 
-func checkOrder(model *models.Order) (err error) {
+func checkOrder(model *models.SpotOrder) (err error) {
 	fields := map[string]interface{}{
 		"id":            model.ID,
 		"clientOrderId": model.ClientOrderID,
@@ -259,7 +249,7 @@ func checkOrder(model *models.Order) (err error) {
 		"timeInForce":   model.TimeInForce,
 		"quantity":      model.Quantity,
 		"price":         model.Price,
-		"cumQuantity":   model.CumQuantity,
+		"cumQuantity":   model.QuantityCumulative,
 		"createdAt":     model.CreatedAt,
 		"updatedAt":     model.UpdatedAt,
 	}
@@ -296,9 +286,6 @@ func checkTrade(model *models.Trade) (err error) {
 func checkTransaction(model *models.Transaction) (err error) {
 	fields := map[string]interface{}{
 		"id":        model.ID,
-		"index":     model.Index,
-		"currency":  model.Currency,
-		"amount":    model.Amount,
 		"status":    model.Status,
 		"type":      model.Type,
 		"createdAt": model.CreatedAt,

@@ -45,7 +45,7 @@ func NewPublicClient() (*PublicClient, error) {
 		period, _ := params["period"].(string)
 
 		if methodKey == "candles" && period == "" { // default period
-			period = string(args.PeriodType30Minutes)
+			period = string(args.Period30Minutes)
 		}
 		symbol, _ := params["symbol"].(string)
 		key := methodKey + ":" + symbol + ":" + period

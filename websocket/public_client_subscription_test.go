@@ -1,14 +1,11 @@
 package websocket
 
 import (
-	"context"
 	"fmt"
-	"sync"
 	"testing"
 	"time"
 
 	"github.com/cryptomarket/cryptomarket-go/args"
-	"github.com/cryptomarket/cryptomarket-go/models"
 )
 
 func TestTickerSubscription(t *testing.T) {
@@ -48,58 +45,6 @@ func TestTickerSubscription(t *testing.T) {
 	time.Sleep(5 * time.Second)
 }
 
-func TestMultipleTickerSubscriptions(t *testing.T) {
-	client, _ := NewPublicClient()
-	bg := context.Background()
-	result, err := client.GetSymbols(bg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	ctx, cancelFunc := context.WithTimeout(bg, 30*time.Second)
-	defer cancelFunc()
-
-	n := 5
-	var wg sync.WaitGroup
-	wg.Add(n)
-	innerErrCh := make(chan error, n)
-
-	for idx := 0; idx < n; idx++ {
-		symbol := result[idx].ID
-		feedCh, err := client.SubscribeToTicker(args.Symbol(symbol))
-		if err != nil {
-			t.Fatal(err)
-		}
-		go func(symbol string, feedCh chan models.Ticker, errorCh chan error) {
-			for ticker := range feedCh {
-				if err := checkTicker(&ticker); err != nil {
-					errorCh <- fmt.Errorf("%s: %v", symbol, err)
-					break
-				}
-			}
-			wg.Done()
-		}(symbol, feedCh, innerErrCh)
-	}
-	rcvngError := true
-	for rcvngError {
-		select {
-		case err := <-innerErrCh:
-			t.Fatal(err)
-		case <-ctx.Done():
-			rcvngError = false
-		}
-	}
-	for idx := 0; idx < n; idx++ {
-		symbol := result[idx].ID
-		err := client.UnsubscribeToTicker(args.Symbol(symbol))
-		if err != nil {
-			t.Fatal(err)
-		}
-		time.Sleep(1 * time.Second)
-	}
-	close(innerErrCh)
-	wg.Wait()
-}
-
 func TestOrderbookSubscription(t *testing.T) {
 	client, _ := NewPublicClient()
 	feedCh, err := client.SubscribeToOrderbook(args.Symbol("EOSETH"))
@@ -135,7 +80,7 @@ func TestOrderbookSubscription(t *testing.T) {
 
 func TestCandlesSubscription(t *testing.T) {
 	client, _ := NewPublicClient()
-	feedCh, err := client.SubscribeToCandles(args.Symbol("EOSETH"), args.Period(args.PeriodType15Minutes))
+	feedCh, err := client.SubscribeToCandles(args.Symbol("EOSETH"), args.Period(args.Period15Minutes))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -157,7 +102,7 @@ func TestCandlesSubscription(t *testing.T) {
 		t.Fatal(err)
 	case <-time.After(1 * time.Minute):
 	}
-	err = client.UnsubscribeToCandles(args.Symbol("EOSETH"), args.Period(args.PeriodType15Minutes))
+	err = client.UnsubscribeToCandles(args.Symbol("EOSETH"), args.Period(args.Period15Minutes))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -57,7 +57,7 @@ func (client *clientBase) buildKeyFromResponse(response wsResponse) string {
 	} else {
 		period := response.Params.Period
 		if methodKey == "candles" && period == "" { // default period
-			period = string(args.PeriodType30Minutes)
+			period = string(args.Period30Minutes)
 		}
 		key = methodKey + ":" + response.Params.Symbol + ":" + period
 	}
