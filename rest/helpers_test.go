@@ -93,7 +93,7 @@ func checkTicker(model *models.Ticker) (err error) {
 	return
 }
 
-func checkQuotationPrice(model *models.QuotationPrice) (err error) {
+func checkQuotationPrice(model *models.Price) (err error) {
 	fields := map[string]interface{}{
 		"currency":  model.Currency,
 		"price":     model.Price,
@@ -103,7 +103,7 @@ func checkQuotationPrice(model *models.QuotationPrice) (err error) {
 	return
 }
 
-func checkTickerPrice(model *models.TickerPrice) (err error) {
+func checkTickerPrice(model *models.Price) (err error) {
 	fields := map[string]interface{}{
 		"price":     model.Price,
 		"timestamp": model.Timestamp,
@@ -112,7 +112,7 @@ func checkTickerPrice(model *models.TickerPrice) (err error) {
 	return
 }
 
-func checkQuotationPriceHistory(model *models.QuotationPriceHistory) (err error) {
+func checkQuotationPriceHistory(model *models.PriceHistory) (err error) {
 	fields := map[string]interface{}{
 		"currency": model.Currency,
 		"history":  model.History,
@@ -183,12 +183,11 @@ func checkOrderbook(model *models.OrderBook) (err error) {
 
 func checkCandle(model *models.Candle) (err error) {
 	fields := map[string]interface{}{
-
 		"timestamp":   model.Timestamp,
 		"open":        model.Open,
 		"close":       model.Close,
-		"min":         model.Min,
-		"max":         model.Max,
+		"min":         model.Low,
+		"max":         model.High,
 		"volume":      model.Volume,
 		"volumeQuote": model.VolumeQuote,
 	}
@@ -206,7 +205,7 @@ func checkBalance(model *models.Balance) (err error) {
 	return
 }
 
-func checkOrder(model *models.SpotOrder) (err error) {
+func checkOrder(model *models.Order) (err error) {
 	fields := map[string]interface{}{
 		"id":                  model.ID,
 		"client_order_id":     model.ClientOrderID,
@@ -260,11 +259,11 @@ func checkReport(model *models.Report) (err error) {
 		"symbol":        model.Symbol,
 		"side":          model.Side,
 		"status":        model.Status,
-		"type":          model.Type,
+		"type":          model.OrderType,
 		"timeInForce":   model.TimeInForce,
 		"quantity":      model.Quantity,
 		"price":         model.Price,
-		"cumQuantity":   model.CumQuantity,
+		"cumQuantity":   model.QuantityCumulative,
 		"createdAt":     model.CreatedAt,
 		"updatedAt":     model.UpdatedAt,
 		"report type":   model.ReportType,
@@ -297,9 +296,8 @@ func checkTradingCommission(model *models.TradingCommission) (err error) {
 type checkable interface {
 	models.Currency |
 		models.Symbol |
-		models.QuotationPrice |
-		models.TickerPrice |
-		models.SpotOrder |
+		models.Price |
+		models.Order |
 		models.Balance |
 		models.Trade |
 		models.CryptoAddress |

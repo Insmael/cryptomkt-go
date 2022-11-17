@@ -4,10 +4,8 @@ package args
 type SideType string
 
 const (
-	// SideTypeSell is the sell side for an order or a trade
-	SideTypeSell SideType = "sell"
-	// SideTypeBuy is the buy side for an order or a trade
-	SideTypeBuy SideType = "buy"
+	SideSell SideType = "sell"
+	SideBuy  SideType = "buy"
 )
 
 // OrderType is a type of order
@@ -26,7 +24,6 @@ const (
 // TimeInForceType is the time in force of an order
 type TimeInForceType string
 
-// types of time in force
 const (
 	TimeInForceGTC TimeInForceType = "GTC" // Good Till Cancel
 	TimeInForceIOC TimeInForceType = "IOC" // Immediate or Cancel
@@ -39,28 +36,22 @@ const (
 type SortType string
 
 const (
-	// SortTypeASC is the ascending sorting direction of a query
-	SortASC SortType = "ASC"
-	// SortTypeDESC is the descending sorting direction of a query
+	SortASC  SortType = "ASC"
 	SortDESC SortType = "DESC"
 )
 
-// SortByType is the parameter for sorting
+// SortBy is the field used for sorting lists
 type SortByType string
 
 const (
-	// SortByTypeTimestamp is the sorting field for pagination, sorting by timestamp
 	SortByTimestamp SortByType = "timestamp"
-	// SortByTypeID is the sorting field for pagination, sorting by id
-	SortByID SortByType = "id"
-
+	SortByID        SortByType = "id"
 	SortByCreatedAt SortByType = "created_at"
 )
 
 // PeriodType is the period of a candle
 type PeriodType string
 
-// candle periods
 const (
 	Period1Minute   PeriodType = "M1"
 	Period3Minutes  PeriodType = "M3"
@@ -74,18 +65,15 @@ const (
 	Period1Month    PeriodType = "1M"
 )
 
-// MarginType is the type of margin of a trade
-type MarginType string
-
-// IdentifyByType for transfers
+// IdentifyByType is the type of identifier used for transafers between users
 type IdentifyByType string
 
-// identify by types
 const (
 	IdentifyByEmail    IdentifyByType = "email"
 	IdentifyByUsername IdentifyByType = "username"
 )
 
+// AccountType is the type of account used for internal user tranfers
 type AccountType string
 
 const (
@@ -101,34 +89,28 @@ const (
 	UseOffChainRequired  UseOffchainType = "required"
 )
 
-type TransactionType string
+type TransactionTypeType string
 
 const (
-	TransactionDeposit  TransactionType = "DEPOSIT"
-	TransactionWithdraw TransactionType = "WITHDRAW"
-	TransactionTransfer TransactionType = "TRANSFER"
-	TransactionSwap     TransactionType = "SWAP"
+	TransactionTypeDeposit  TransactionTypeType = "DEPOSIT"
+	TransactionTypeWithdraw TransactionTypeType = "WITHDRAW"
+	TransactionTypeTransfer TransactionTypeType = "TRANSFER"
+	TransactionTypeSwap     TransactionTypeType = "SWAP"
 )
 
-type TransactionSubtypeType string
+type TransactionSubTypeType string
 
 const (
-	TransactionSubtyeUnclassified        TransactionSubtypeType = "UNCLASSIFIED"
-	TransactionSubtyeBlockchain          TransactionSubtypeType = "BLOCKCHAIN"
-	TransactionSubtyeAirdrop             TransactionSubtypeType = "AIRDROP"
-	TransactionSubtyeAffiliate           TransactionSubtypeType = "AFFILIATE"
-	TransactionSubtyeStaking             TransactionSubtypeType = "STAKING"
-	TransactionSubtyeBuyCrypto           TransactionSubtypeType = "BUY_CRYPTO"
-	TransactionSubtyeOffchain            TransactionSubtypeType = "OFFCHAIN"
-	TransactionSubtyeFiat                TransactionSubtypeType = "FIAT"
-	TransactionSubtyeSubAccount          TransactionSubtypeType = "SUB_ACCOUNT"
-	TransactionSubtyeWalletToSpot        TransactionSubtypeType = "WALLET_TO_SPOT"
-	TransactionSubtyeSpotToWallet        TransactionSubtypeType = "SPOT_TO_WALLET"
-	TransactionSubtyeWalletToDerivatives TransactionSubtypeType = "WALLET_TO_DERIVATIVES"
-	TransactionSubtyeDerivativesToWallet TransactionSubtypeType = "DERIVATIVES_TO_WALLET"
-	TransactionSubtyeChainSwitchFrom     TransactionSubtypeType = "CHAIN_SWITCH_FROM"
-	TransactionSubtyeChainSwitchTo       TransactionSubtypeType = "CHAIN_SWITCH_TO"
-	TransactionSubtyeInstantExchange     TransactionSubtypeType = "INSTANT_EXCHANGE"
+	TransactionSubTypeUnclassified    TransactionSubTypeType = "UNCLASSIFIED"
+	TransactionSubTypeBlockchain      TransactionSubTypeType = "BLOCKCHAIN"
+	TransactionSubTypeAffiliate       TransactionSubTypeType = "AFFILIATE"
+	TransactionSubTypeOffchain        TransactionSubTypeType = "OFFCHAIN"
+	TransactionSubTypeFiat            TransactionSubTypeType = "FIAT"
+	TransactionSubTypeSubAccount      TransactionSubTypeType = "SUB_ACCOUNT"
+	TransactionSubTypeWalletToSpot    TransactionSubTypeType = "WALLET_TO_SPOT"
+	TransactionSubTypeSpotToWallet    TransactionSubTypeType = "SPOT_TO_WALLET"
+	TransactionSubTypeChainSwitchFrom TransactionSubTypeType = "CHAIN_SWITCH_FROM"
+	TransactionSubTypeChainSwitchTo   TransactionSubTypeType = "CHAIN_SWITCH_TO"
 )
 
 type TransactionStatusType string
@@ -141,11 +123,89 @@ const (
 	TransactionStatusRolledBack TransactionStatusType = "ROLLED_BACK"
 )
 
-type AirdropStatusType string
+type TickerSpeedType string
 
 const (
-	AirdropStatusAvailable AirdropStatusType = "available"
-	AirdropStatusClaimed   AirdropStatusType = "claimed"
-	AirdropStatusPending   AirdropStatusType = "pending"
-	AirdropStatusCommited  AirdropStatusType = "commited"
+	TickerSpeed1s TickerSpeedType = "1s"
+	TickerSpeed3s TickerSpeedType = "3s"
+)
+
+type OrderBookSpeedType string
+
+const (
+	OrderBookSpeed100ms  OrderBookSpeedType = "100ms"
+	OrderBookSpeed500ms  OrderBookSpeedType = "500ms"
+	OrderBookSpeed1000ms OrderBookSpeedType = "1000ms"
+)
+
+type WSDepthType string
+
+const (
+	WSDepth5  WSDepthType = "D5"
+	WSDepth10 WSDepthType = "D10"
+	WSDepth20 WSDepthType = "D20"
+)
+
+type NotificationType string
+
+const (
+	NotificationSnapshot NotificationType = "snapshot"
+	NotificationUpdate   NotificationType = "update"
+	NotificationData     NotificationType = "data"
+)
+
+type ContingencyType string
+
+const (
+	ContingencyAllOrNone                ContingencyType = "allOrNone"
+	ContingencyAON                      ContingencyType = "allOrNone"
+	ContingencyOneCancelOther           ContingencyType = "oneCancelOther"
+	ContingencyOCO                      ContingencyType = "oneCancelOther"
+	ContingencyOneTriggerOneCancelOther ContingencyType = "oneTriggerOneCancelOther"
+	ContingencyOTOCO                    ContingencyType = "oneTriggerOneCancelOther"
+)
+
+type OrderStatusType string
+
+const (
+	OrderStatusNew             OrderStatusType = "new"
+	OrderStatusSuspended       OrderStatusType = "suspended"
+	OrderStatusPartiallyFilled OrderStatusType = "partiallyFilled"
+	OrderStatusFilled          OrderStatusType = "filled"
+	OrderStatusCanceled        OrderStatusType = "canceled"
+	OrderStatusExpired         OrderStatusType = "expired"
+)
+
+type ReportType string
+
+const (
+	ReportStatus    ReportType = "status"
+	ReportNew       ReportType = "new"
+	ReportCanceled  ReportType = "canceled"
+	ReportRejected  ReportType = "rejected"
+	ReportExpired   ReportType = "expired"
+	ReportSuspended ReportType = "suspended"
+	ReportTrade     ReportType = "trade"
+	ReportReplaced  ReportType = "replaced"
+)
+
+type SymbolStatusType string
+
+const (
+	SymbolStatusWorking   SymbolStatusType = "working"
+	SymbolStatusSuspended SymbolStatusType = "suspended"
+)
+
+type MetaTransactionStatusType string
+
+const (
+	MetaTransactionStatusActive   MetaTransactionStatusType = "ACTIVE"
+	MetaTransactionStatusInactive MetaTransactionStatusType = "INACTIVE"
+)
+
+type TransferTypeType string
+
+const (
+	TransferToSubAccount   TransferTypeType = "to_sub_account"
+	TransferFromSubAccount TransferTypeType = "from_sub_account"
 )

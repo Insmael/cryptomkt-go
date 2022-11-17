@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/cryptomarket/cryptomarket-go/args"
+	"github.com/cryptomarket/cryptomarket-go/internal"
 
 	"github.com/cryptomarket/cryptomarket-go/models"
 )
@@ -34,6 +35,10 @@ type Client struct {
 // NewClient creates a new rest client to communicate with the exchange.
 // Requests to the exchange via this client use the args package for aguments.
 // All requests accept contexts for cancellation.
+// arguments:
+//  apiKey // the key of the user
+//  apiSecret // the secret key of the user
+//  window // the window of execution for requests to the server in milliseconds. Max is 60_000 (miliseconds). Use 0 for default window (10 seconds)
 func NewClient(apiKey, apiSecret string, window int) *Client {
 	return &Client{
 		hclient: newHTTPClient(apiKey, apiSecret, window),
@@ -173,13 +178,13 @@ func (client *Client) handleResponseData(
 ) error {
 	errorResponse := models.ErrorMetadata{}
 	json.Unmarshal(data, &errorResponse)
-	serverError := errorResponse.Error
-	if serverError != nil { // is a real error
+	apiError := errorResponse.APIError
+	if apiError != nil { // is a real error
 		return fmt.Errorf(
 			"CryptomarketAPIError: (code=%v) %v. %v",
-			serverError.Code,
-			serverError.Message,
-			serverError.Description,
+			apiError.Code,
+			apiError.Message,
+			apiError.Description,
 		)
 	}
 	err := json.Unmarshal(data, model)
@@ -220,7 +225,7 @@ func (client *Client) GetCurrency(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result *models.Currency, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameCurrency)
+	params, err := args.BuildParams(arguments, internal.ArgNameCurrency)
 	if err != nil {
 		return
 	}
@@ -266,7 +271,7 @@ func (client *Client) GetSymbol(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result *models.Symbol, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameSymbol)
+	params, err := args.BuildParams(arguments, internal.ArgNameSymbol)
 	if err != nil {
 		return
 	}
@@ -308,7 +313,7 @@ func (client *Client) GetTickerOfSymbol(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result *models.Ticker, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameSymbol)
+	params, err := args.BuildParams(arguments, internal.ArgNameSymbol)
 	if err != nil {
 		return
 	}
@@ -333,8 +338,8 @@ func (client *Client) GetTickerOfSymbol(
 func (client *Client) GetPrices(
 	ctx context.Context,
 	arguments ...args.Argument,
-) (result map[string]models.QuotationPrice, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameTo)
+) (result map[string]models.Price, err error) {
+	params, err := args.BuildParams(arguments, internal.ArgNameTo)
 	if err != nil {
 		return
 	}
@@ -355,12 +360,12 @@ func (client *Client) GetPrices(
 //  Sort(SortType)  // Optional. Sort direction. SortASC or SortDESC. Default is SortDESC
 //  Since(string)  // Optional. Initial value of the queried interval. As Datetime
 //  Until(string)  // Optional. Last value of the queried interval. As Datetime
-//  Limit(int64)  // Optional. Prices per currency pair. Defaul is 1. Min is 1. Max is 1000
+//  Limit(int)  // Optional. Prices per currency pair. Defaul is 1. Min is 1. Max is 1000
 func (client *Client) GetPricesHistory(
 	ctx context.Context,
 	arguments ...args.Argument,
-) (result map[string]models.QuotationPriceHistory, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameTo)
+) (result map[string]models.PriceHistory, err error) {
+	params, err := args.BuildParams(arguments, internal.ArgNameTo)
 	if err != nil {
 		return
 	}
@@ -379,7 +384,7 @@ func (client *Client) GetPricesHistory(
 func (client *Client) GetTickerLastPrices(
 	ctx context.Context,
 	arguments ...args.Argument,
-) (result map[string]models.TickerPrice, err error) {
+) (result map[string]models.Price, err error) {
 	params, err := args.BuildParams(arguments)
 	if err != nil {
 		return
@@ -399,8 +404,8 @@ func (client *Client) GetTickerLastPrices(
 func (client *Client) GetTickerLastPricesOfSymbol(
 	ctx context.Context,
 	arguments ...args.Argument,
-) (result *models.TickerPrice, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameSymbol)
+) (result *models.Price, err error) {
+	params, err := args.BuildParams(arguments, internal.ArgNameSymbol)
 	if err != nil {
 		return
 	}
@@ -427,7 +432,7 @@ func (client *Client) GetTickerLastPricesOfSymbol(
 //  Sort(SortType)  // Optional. Sort direction. SortASC or SortDESC. Default is SortDESC
 //  From(string)  // Optional. Initial value of the queried interval
 //  Till(string)  // Optional. Last value of the queried interval
-//  Limit(int64)  // Optional. Prices per currency pair. Defaul is 10. Min is 1. Max is 1000
+//  Limit(int)  // Optional. Prices per currency pair. Defaul is 10. Min is 1. Max is 1000
 func (client *Client) GetTrades(
 	ctx context.Context,
 	arguments ...args.Argument,
@@ -449,13 +454,13 @@ func (client *Client) GetTrades(
 //  Sort(SortType)  // Optional. Sort direction. SortASC or SortDESC. Default is SortDESC
 //  Since(string)  // Optional. Initial value of the queried interval
 //  Until(string)  // Optional. Last value of the queried interval
-//  Limit(int64)  // Optional. Prices per currency pair. Defaul is 10. Min is 1. Max is 1000
-//  Offset(int64)  // Optional. Default is 0. Min is 0. Max is 100000
+//  Limit(int)  // Optional. Prices per currency pair. Defaul is 10. Min is 1. Max is 1000
+//  Offset(int)  // Optional. Default is 0. Min is 0. Max is 100000
 func (client *Client) GetTradesOfSymbol(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result []models.PublicTrade, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameSymbol)
+	params, err := args.BuildParams(arguments, internal.ArgNameSymbol)
 	if err != nil {
 		return
 	}
@@ -478,7 +483,7 @@ func (client *Client) GetTradesOfSymbol(
 //
 // Arguments:
 //  Symbols([]string)  // Optional. A list of symbol ids
-//  Depth(int64)  // Optional. Order Book depth. Default value is 100. Set to 0 to view the full Order Book
+//  Depth(int)  // Optional. Order Book depth. Default value is 100. Set to 0 to view the full Order Book
 func (client *Client) GetOrderbooks(
 	ctx context.Context,
 	arguments ...args.Argument,
@@ -506,12 +511,12 @@ func (client *Client) GetOrderbooks(
 //
 // Arguments:
 //  Symbol(string)  // A symbol id
-//  Depth(int64)  // Optional. Order Book depth. Default value is 100. Set to 0 to view the full Order Book
+//  Depth(int)  // Optional. Order Book depth. Default value is 100. Set to 0 to view the full Order Book
 func (client *Client) GetOrderBookOfSymbol(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result *models.OrderBook, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameSymbol)
+	params, err := args.BuildParams(arguments, internal.ArgNameSymbol)
 	if err != nil {
 		return
 	}
@@ -548,8 +553,8 @@ func (client *Client) GetOrderBookVolumeOfSymbol(
 ) (result *models.OrderBook, err error) {
 	params, err := args.BuildParams(
 		arguments,
-		args.ArgNameSymbol,
-		args.ArgNameVolume,
+		internal.ArgNameSymbol,
+		internal.ArgNameVolume,
 	)
 	if err != nil {
 		return
@@ -586,7 +591,7 @@ func (client *Client) GetOrderBookVolumeOfSymbol(
 //  Sort(SortType)  // Optional. Sort direction. SortASC or SortDESC. Default is SortDESC
 //  From(string)  // Optional. Initial value of the queried interval. As DateTime
 //  Till(string)  // Optional. Last value of the queried interval. As DateTime
-//  Limit(int64)  // Optional. Prices per currency pair. Defaul is 10. Min is 1. Max is 1000
+//  Limit(int)  // Optional. Prices per currency pair. Defaul is 10. Min is 1. Max is 1000
 func (client *Client) GetCandles(
 	ctx context.Context,
 	arguments ...args.Argument,
@@ -612,13 +617,13 @@ func (client *Client) GetCandles(
 //  Sort(SortType)  // Optional. Sort direction. SortASC or SortDESC. Default is SortDESC
 //  From(string)  // Optional. Initial value of the queried interval. As DateTime
 //  Till(string)  // Optional. Last value of the queried interval. As DateTime
-//  Limit(int64)  // Optional. Prices per currency pair. Defaul is 100. Min is 1. Max is 1000
-//  Offset(int64)  // Optional. Default is 0. Min is 0. Max is 100000
+//  Limit(int)  // Optional. Prices per currency pair. Defaul is 100. Min is 1. Max is 1000
+//  Offset(int)  // Optional. Default is 0. Min is 0. Max is 100000
 func (client *Client) GetCandlesOfSymbol(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result []models.Candle, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameSymbol)
+	params, err := args.BuildParams(arguments, internal.ArgNameSymbol)
 	if err != nil {
 		return
 	}
@@ -635,12 +640,12 @@ func (client *Client) GetCandlesOfSymbol(
 // SPOT TRADING //
 //////////////////
 
-// GetSpotTradingBalance gets the user's spot trading balance for all currencies with balance
+// GetSpotTradingBalances gets the user's spot trading balance for all currencies with balance
 //
 // Requires the "Orderbook, History, Trading balance" API key Access Right
 //
 // https://api.exchange.cryptomkt.com/#get-spot-trading-balance
-func (client *Client) GetSpotTradingBalance(
+func (client *Client) GetSpotTradingBalances(
 	ctx context.Context,
 ) (result []models.Balance, err error) {
 	err = client.privateGet(ctx, endpointTradingBalance, nil, &result)
@@ -659,20 +664,20 @@ func (client *Client) GetSpotTradingBalanceOfCurrency(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result *models.Balance, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameCurrency)
+	params, err := args.BuildParams(arguments, internal.ArgNameCurrency)
 	if err != nil {
 		return
 	}
 	err = client.privateGet(
 		ctx,
-		endpointTradingBalance+"/"+params[args.ArgNameCurrency].(string),
+		endpointTradingBalance+"/"+params[internal.ArgNameCurrency].(string),
 		nil,
 		&result,
 	)
 	if err != nil {
 		return
 	}
-	result.Currency = params[args.ArgNameCurrency].(string)
+	result.Currency = params[internal.ArgNameCurrency].(string)
 	return
 }
 
@@ -687,7 +692,7 @@ func (client *Client) GetSpotTradingBalanceOfCurrency(
 func (client *Client) GetAllActiveSpotOrders(
 	ctx context.Context,
 	arguments ...args.Argument,
-) (result []models.SpotOrder, err error) {
+) (result []models.Order, err error) {
 	params, _ := args.BuildParams(arguments)
 	err = client.privateGet(ctx, endpointOrder, params, &result)
 	return
@@ -704,8 +709,8 @@ func (client *Client) GetAllActiveSpotOrders(
 func (client *Client) GetActiveSpotOrder(
 	ctx context.Context,
 	arguments ...args.Argument,
-) (result *models.SpotOrder, err error) {
-	params, _ := args.BuildParams(arguments, args.ArgNameClientOrderID)
+) (result *models.Order, err error) {
+	params, _ := args.BuildParams(arguments, internal.ArgNameClientOrderID)
 	err = client.privateGet(
 		ctx,
 		endpointOrder+"/"+params["client_order_id"].(string),
@@ -740,12 +745,12 @@ func (client *Client) GetActiveSpotOrder(
 func (client *Client) CreateSpotOrder(
 	ctx context.Context,
 	arguments ...args.Argument,
-) (result *models.SpotOrder, err error) {
+) (result *models.Order, err error) {
 	params, err := args.BuildParams(
 		arguments,
-		args.ArgNameSymbol,
-		args.ArgNameSide,
-		args.ArgNameQuantity,
+		internal.ArgNameSymbol,
+		internal.ArgNameSide,
+		internal.ArgNameQuantity,
 	)
 	if err != nil {
 		return
@@ -771,12 +776,12 @@ func (client *Client) CreateSpotOrder(
 func (client *Client) ReplaceSpotOrder(
 	ctx context.Context,
 	arguments ...args.Argument,
-) (result *models.SpotOrder, err error) {
+) (result *models.Order, err error) {
 	params, err := args.BuildParams(
 		arguments,
-		args.ArgNameClientOrderID,
-		args.ArgNameNewClientOrderID,
-		args.ArgNameQuantity,
+		internal.ArgNameClientOrderID,
+		internal.ArgNameNewClientOrderID,
+		internal.ArgNameQuantity,
 	)
 	if err != nil {
 		return
@@ -787,6 +792,56 @@ func (client *Client) ReplaceSpotOrder(
 	return
 }
 
+// CreateSpotOrderList creates a list of spot orders and returns a list of the created spot orders or a possible error
+//
+// Types or contingency:
+//
+//  - ContingencyTypeAllOrNone (ContingencyTypeAON) (AON)
+//  - ContingencyTypeOneCancelOther (ContingencyTypeOCO) (OCO)
+//  - ContingencyOneTriggerOneCancelOther (ContingencyTypeOTOCO) (OTOCO)
+//
+// Restriction in the number of orders:
+//
+//  - An AON list must have 2 or 3 orders
+//  - An OCO list must have 2 or 3 orders
+//  - An OTOCO must have 3 or 4 orders
+//
+// Symbol restrictions:
+//
+//  - For an AON order list, the symbol code of orders must be unique for each order in the list.
+//  - For an OCO order list, there are no symbol code restrictions.
+//  - For an OTOCO order list, the symbol code of orders must be the same for all orders in the list (placing orders in different order books is not supported).
+//
+// ORDER_TYPE restrictions:
+//  - For an AON order list, orders must be OrderLimit or OrderMarket
+//  - For an OCO order list, orders must be OrderLimit, OrderStopLimit, OrderStopMarket, OrderTakeProfitLimit or OrderTakeProfitMarket.
+//  - An OCO order list cannot include more than one limit order (the same applies to secondary orders in an OTOCO order list).
+//  - For an OTOCO order list, the first order must be OrderLimit, OrderMarket, OrderStopLimit, OrderStopMarket, OrderTakeProfitLimit or OrderTakeProfitMarket.
+//  - For an OTOCO order list, the secondary orders have the same restrictions as an OCO order
+//  - Default is OrderTypeLimit
+//
+// https://api.exchange.cryptomkt.com/#create-new-spot-order-list-2
+//
+// Arguments:
+//  ContingencyType(ContingencyTypeType) order list type.
+//  Orders(OrderRequest[]) the list of OrderRequests in the order list
+//  OrderListID(string) order list identifier. If not provided, it will be generated by the system. Must be equal to the client order id of the first order in the requests list.
+func (client *Client) CreateSpotOrderList(
+	ctx context.Context,
+	arguments ...args.Argument,
+) (result []models.Order, err error) {
+	params, err := args.BuildParams(
+		arguments,
+		internal.ArgNameContingencyType,
+		internal.ArgNameOrders,
+	)
+	if err != nil {
+		return
+	}
+	err = client.post(ctx, endpointOrderList, params, &result)
+	return
+}
+
 // CancelAllSpotOrders Cancel all active spot orders, or all active orders for a specified symbol
 //
 // Requires the "Place/cancel orders" API key Access Right
@@ -794,7 +849,7 @@ func (client *Client) ReplaceSpotOrder(
 // https://api.exchange.cryptomkt.com/#cancel-all-spot-orders
 func (client *Client) CancelAllSpotOrders(
 	ctx context.Context,
-) (result []models.SpotOrder, err error) {
+) (result []models.Order, err error) {
 	err = client.delete(ctx, endpointOrder, nil, &result)
 	return
 }
@@ -810,10 +865,10 @@ func (client *Client) CancelAllSpotOrders(
 func (client *Client) CancelSpotOrder(
 	ctx context.Context,
 	arguments ...args.Argument,
-) (result *models.SpotOrder, err error) {
+) (result *models.Order, err error) {
 	params, err := args.BuildParams(
 		arguments,
-		args.ArgNameClientOrderID,
+		internal.ArgNameClientOrderID,
 	)
 	if err != nil {
 		return
@@ -851,24 +906,24 @@ func (client *Client) GetAllTradingCommissions(
 //
 // Arguments:
 //  Symbol(string)  // The symbol of the commission rate
-func (client *Client) GetTradingCommission(
+func (client *Client) GetTradingCommissionOfSymbol(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result *models.TradingCommission, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameSymbol)
+	params, err := args.BuildParams(arguments, internal.ArgNameSymbol)
 	if err != nil {
 		return
 	}
 	err = client.privateGet(
 		ctx,
-		endpointTradingCommission+"/"+params[args.ArgNameSymbol].(string),
+		endpointTradingCommission+"/"+params[internal.ArgNameSymbol].(string),
 		nil,
 		&result,
 	)
 	if err != nil {
 		return
 	}
-	result.Symbol = params[args.ArgNameSymbol].(string)
+	result.Symbol = params[internal.ArgNameSymbol].(string)
 	return
 }
 
@@ -892,12 +947,12 @@ func (client *Client) GetTradingCommission(
 //  Sort(SortType)  // Optional. Sort direction. SortASC or SortDESC. Default is SortDESC
 //  From(string)  // Optional. Initial value of the queried interval
 //  Till(string)  // Optional. Last value of the queried interval
-//  Limit(int64)  // Optional. Prices per currency pair. Defaul is 100. Max is 1000
-//  Offset(int64)  // Optional. Default is 0. Max is 100000
+//  Limit(int)  // Optional. Prices per currency pair. Defaul is 100. Max is 1000
+//  Offset(int)  // Optional. Default is 0. Max is 100000
 func (client *Client) GetSpotOrdersHistory(
 	ctx context.Context,
 	arguments ...args.Argument,
-) (result []models.SpotOrder, err error) {
+) (result []models.Order, err error) {
 	params, err := args.BuildParams(arguments)
 	if err != nil {
 		return
@@ -919,8 +974,8 @@ func (client *Client) GetSpotOrdersHistory(
 //  Sort(SortType)  // Optional. Sort direction. SortASC or SortDESC. Default is SortDESC
 //  From(string)  // Optional. Initial value of the queried interval
 //  Till(string)  // Optional. Last value of the queried interval
-//  Limit(int64)  // Optional. Prices per currency pair. Defaul is 100. Max is 1000
-//  Offset(int64)  // Optional. Default is 0. Max is 100000
+//  Limit(int)  // Optional. Prices per currency pair. Defaul is 100. Max is 1000
+//  Offset(int)  // Optional. Default is 0. Max is 100000
 func (client *Client) GetSpotTradesHistory(
 	ctx context.Context,
 	arguments ...args.Argument,
@@ -961,7 +1016,7 @@ func (client *Client) GetWalletBalanceOfCurrency(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result *models.Balance, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameCurrency)
+	params, err := args.BuildParams(arguments, internal.ArgNameCurrency)
 	if err != nil {
 		return
 	}
@@ -973,7 +1028,7 @@ func (client *Client) GetWalletBalanceOfCurrency(
 	if err != nil {
 		return
 	}
-	result.Currency = params[args.ArgNameCurrency].(string)
+	result.Currency = params[internal.ArgNameCurrency].(string)
 	return
 }
 
@@ -1006,7 +1061,7 @@ func (client *Client) GetDepositCryptoAddressOfCurrency(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result *models.CryptoAddress, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameCurrency)
+	params, err := args.BuildParams(arguments, internal.ArgNameCurrency)
 	if err != nil {
 		return
 	}
@@ -1031,7 +1086,7 @@ func (client *Client) CreateDepositCryptoAddress(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result *models.CryptoAddress, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameCurrency)
+	params, err := args.BuildParams(arguments, internal.ArgNameCurrency)
 	if err != nil {
 		return
 	}
@@ -1058,7 +1113,7 @@ func (client *Client) GetLast10DepositCryptoAddresses(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result []models.CryptoAddress, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameCurrency)
+	params, err := args.BuildParams(arguments, internal.ArgNameCurrency)
 	if err != nil {
 		return
 	}
@@ -1085,7 +1140,7 @@ func (client *Client) GetLast10WithdrawalCryptoAddresses(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result []models.CryptoAddress, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameCurrency)
+	params, err := args.BuildParams(arguments, internal.ArgNameCurrency)
 	if err != nil {
 		return
 	}
@@ -1123,7 +1178,7 @@ func (client *Client) GetLast10WithdrawalCryptoAddresses(
 //  PaymentID(string)  // Optional.
 //  IncludeFee(bool)  // Optional. If true then the amount includes fees. Default is false
 //  AutoCommit(bool)  // Optional. If false then you should commit or rollback the transaction in an hour. Used in two phase commit schema. Default is true
-//  UseOffchain(UseOffchainType)  // Optional. Whether the withdrawal may be comitted offchain. Accepted values are UseOffchainNever, UseOffchainOptionaly and UseOffChainRequired. Default is TODO
+//  UseOffchain(UseOffchainType)  // Optional. Whether the withdrawal may be comitted offchain. Accepted values are UseOffchainNever, UseOffchainOptionaly and UseOffChainRequired
 //  PublicComment(string)  // Optional. Maximum lenght is 255
 func (client *Client) withdrawCrypto(
 	ctx context.Context,
@@ -1131,9 +1186,9 @@ func (client *Client) withdrawCrypto(
 ) (result string, err error) {
 	params, err := args.BuildParams(
 		arguments,
-		args.ArgNameCurrency,
-		args.ArgNameAmount,
-		args.ArgNameAddress,
+		internal.ArgNameCurrency,
+		internal.ArgNameAmount,
+		internal.ArgNameAddress,
 	)
 	if err != nil {
 		return
@@ -1151,12 +1206,12 @@ func (client *Client) withdrawCrypto(
 // https://api.exchange.cryptomkt.com/#withdraw-crypto-commit-or-rollback
 //
 // Arguments:
-//  Id(string)  // the withdrawal transaction identifier
+//  ID(string)  // the withdrawal transaction identifier
 func (client *Client) WithdrawCryptoCommit(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result bool, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameID)
+	params, err := args.BuildParams(arguments, internal.ArgNameID)
 	if err != nil {
 		return
 	}
@@ -1178,12 +1233,12 @@ func (client *Client) WithdrawCryptoCommit(
 // https://api.exchange.cryptomkt.com/#withdraw-crypto-commit-or-rollback
 //
 // Arguments:
-//  Id(string)  // the withdrawal transaction identifier
+//  ID(string)  // the withdrawal transaction identifier
 func (client *Client) WithdrawCryptoRollback(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result bool, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameID)
+	params, err := args.BuildParams(arguments, internal.ArgNameID)
 	if err != nil {
 		return
 	}
@@ -1213,8 +1268,8 @@ func (client *Client) GetEstimateWithdrawFee(
 ) (result string, err error) {
 	params, err := args.BuildParams(
 		arguments,
-		args.ArgNameCurrency,
-		args.ArgNameAmount,
+		internal.ArgNameCurrency,
+		internal.ArgNameAmount,
 	)
 	if err != nil {
 		return
@@ -1246,9 +1301,9 @@ func (client *Client) ConvertBetweenCurrencies(
 ) (result []string, err error) {
 	params, err := args.BuildParams(
 		arguments,
-		args.ArgNameFromCurrency,
-		args.ArgNameToCurrency,
-		args.ArgNameAmount,
+		internal.ArgNameFromCurrency,
+		internal.ArgNameToCurrency,
+		internal.ArgNameAmount,
 	)
 	if err != nil {
 		return
@@ -1271,7 +1326,7 @@ func (client *Client) CheckIfCryptoAddressBelongsToCurrentAccount(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result bool, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameAddress)
+	params, err := args.BuildParams(arguments, internal.ArgNameAddress)
 	if err != nil {
 		return
 	}
@@ -1305,10 +1360,10 @@ func (client *Client) TransferBetweenWalletAndExchange(
 ) (transactionID string, err error) {
 	params, err := args.BuildParams(
 		arguments,
-		args.ArgNameCurrency,
-		args.ArgNameAmount,
-		args.ArgNameSource,
-		args.ArgNameDestination,
+		internal.ArgNameCurrency,
+		internal.ArgNameAmount,
+		internal.ArgNameSource,
+		internal.ArgNameDestination,
 	)
 	if err != nil {
 		return
@@ -1316,10 +1371,13 @@ func (client *Client) TransferBetweenWalletAndExchange(
 	response := []string{}
 	err = client.post(
 		ctx,
-		endpointAccountTranser,
+		endpointWalletTranser,
 		params,
 		&response,
 	)
+	if err != nil {
+		return
+	}
 	if len(response) < 1 {
 		return transactionID, errors.New("CryptomarketSDKError: Bad response format")
 	}
@@ -1335,8 +1393,8 @@ func (client *Client) TransferBetweenWalletAndExchange(
 //
 // Arguments:
 //  Currency(string)  // currency code
-//  Amount(float64)  // amount to be transfered
-//  IdentifyBy(string)  // type of identifier. Either IdentifyByEmail or IdentifyByUsername
+//  Amount(string)  // amount to be transfered
+//  IdentifyBy(IdentifyByType)  // type of identifier. Either IdentifyByEmail or IdentifyByUsername
 //  Identifier(string)  // the email or username of the recieving user
 func (client *Client) TransferMoneyToAnotherUser(
 	ctx context.Context,
@@ -1344,10 +1402,10 @@ func (client *Client) TransferMoneyToAnotherUser(
 ) (result string, err error) {
 	params, err := args.BuildParams(
 		arguments,
-		args.ArgNameCurrency,
-		args.ArgNameAmount,
-		args.ArgNameIdentifyBy,
-		args.ArgNameIdentifier)
+		internal.ArgNameCurrency,
+		internal.ArgNameAmount,
+		internal.ArgNameIdentifyBy,
+		internal.ArgNameIdentifier)
 	if err != nil {
 		return
 	}
@@ -1374,16 +1432,16 @@ func (client *Client) TransferMoneyToAnotherUser(
 // Arguments:
 //  TransactionIds([]string)  // Optional. List of transaction identifiers to query
 //  TransactionTypes([]TransactionType)  // Optional. List of types to query. valid types are: TransactionDeposit, TransactionWithdraw, TransactionTransfer and TransactionSwap
-//  TransactionSubtyes([]TransactionSubtye)  // Optional. List of subtypes to query. valid subtypes are: TransactionSubtyeUnclassified, TransactionSubtyeBlockchain, TransactionSubtyeAirdrop, TransactionSubtyeAffiliate, TransactionSubtyeStaking, TransactionSubtyeBuyCrypto, TransactionSubtyeOffchain, TransactionSubtyeFiat, TransactionSubtyeSubAccount, TransactionSubtyeWalletToSpot, TransactionSubtyeSpotToWallet, TransactionSubtyeWalletToDerivatives, TransactionSubtyeDerivativesToWallet, TransactionSubtyeChainSwitchFrom, TransactionSubtyeChainSwitchTo and TransactionSubtyeInstantExchange
+//  TransactionSubTypes([]TransactionSubType)  // Optional. List of subtypes to query. valid subtypes are: TransactionSubTypeUnclassified, TransactionSubTypeBlockchain,  TransactionSubTypeAffiliate,  TransactionSubtypeOffchain, TransactionSubTypeFiat, TransactionSubTypeSubAccount, TransactionSubTypeWalletToSpot, TransactionSubTypeSpotToWallet, TransactionSubTypeChainSwitchFrom and TransactionSubTypeChainSwitchTo
 //  TransactionStatuses([]TransactionStatusType)  // Optional. List of statuses to query. valid subtypes are: TransactionStatusCreated, TransactionStatusPending, TransactionStatusFailed, TransactionStatusSuccess and TransactionStatusRolledBack
 //  SortBy(SortByType)  // Optional. sorting parameter. SortByCreatedAt or SortByID. Default is SortByCreatedAt
 //  From(string)  // Optional. Interval initial value when ordering by CreatedAt. As Datetime.
 //  Till(string)  // Optional. Interval end value when ordering by CreatedAt. As Datetime.
-//  IdFrom(string)  // Optional. Interval initial value when ordering by id. Min is 0
-//  IdTill(string)  // Optional. Interval end value when ordering by id. Min is 0
+//  IDFrom(string)  // Optional. Interval initial value when ordering by id. Min is 0
+//  IDTill(string)  // Optional. Interval end value when ordering by id. Min is 0
 //  Sort(SortType)  // Optional. Sort direction. SortASC or SortDESC. Default is SortDESC
-//  Limit(int64)  // Optional. Transactions per query. Defaul is 100. Max is 1000
-//  Offset(int64)  // Optional. Default is 0. Max is 100000
+//  Limit(int)  // Optional. Transactions per query. Defaul is 100. Max is 1000
+//  Offset(int)  // Optional. Default is 0. Max is 100000
 func (client *Client) GetTransactionHistory(
 	ctx context.Context,
 	arguments ...args.Argument,
@@ -1403,12 +1461,12 @@ func (client *Client) GetTransactionHistory(
 // https://api.exchange.cryptomkt.com/#get-transactions-history
 //
 // Arguments:
-//  Id(string)  // The identifier of the transaction
+//  ID(string)  // The identifier of the transaction
 func (client *Client) GetTransaction(
 	ctx context.Context,
 	arguments ...args.Argument,
 ) (result *models.Transaction, err error) {
-	params, err := args.BuildParams(arguments, args.ArgNameID)
+	params, err := args.BuildParams(arguments, internal.ArgNameID)
 	if err != nil {
 		return
 	}
@@ -1437,8 +1495,8 @@ func (client *Client) CheckIfOffchainIsAvailable(
 ) (result bool, err error) {
 	params, err := args.BuildParams(
 		arguments,
-		args.ArgNameCurrency,
-		args.ArgNameAddress,
+		internal.ArgNameCurrency,
+		internal.ArgNameAddress,
 	)
 	if err != nil {
 		return
@@ -1454,72 +1512,6 @@ func (client *Client) CheckIfOffchainIsAvailable(
 	return
 }
 
-// GetAirdrops gets the list of airdrops
-//
-// Requires the "Payment information" API key Access Right
-//
-// https://api.exchange.cryptomkt.com/#airdrops
-//
-// Arguments:
-//  Currency(string)  // Optional. Code of the dropped currency
-//  BaseCurrency(string)  // Optional. The code of base currency (the currency used for dropped currency amount calculation)
-//  ActiveAt(string)  // Optional. Default value is active at current time
-//  Statuses([]StatusesType)  // Optional. A list of desired airdrop statuses. Accepted values are: AirdropStatusAvailable (ready for claim), AirdropStatusClaimed (requested already), AirdropStatusPending (payment in progress), AirdropStatusCommited (payment finished)
-//  TransactionId(string)  // Optional. Airdrop transaction identifier
-func (client *Client) GetAirdrops(
-	ctx context.Context,
-	arguments ...args.Argument,
-) (result []models.Airdrop, err error) {
-	params, err := args.BuildParams(
-		arguments,
-		args.ArgNameCurrency,
-		args.ArgNameAddress,
-		args.ArgNamePaymentID,
-	)
-	if err != nil {
-		return
-	}
-	err = client.privateGet(
-		ctx,
-		endpointAirdrops,
-		params,
-		&result,
-	)
-	return
-}
-
-// ClaimAirdrop Claim an airdrop by its currency code
-//
-// Requires the "Withdraw cryptocurrencies" API key Access Right
-//
-// https://api.exchange.cryptomkt.com/#airdrops
-//
-// Arguments:
-//  Currency(string)  // Code of the dropped currency
-func (client *Client) ClaimAirdrop(
-	ctx context.Context,
-	arguments ...args.Argument,
-) (result []models.Airdrop, err error) {
-	params, err := args.BuildParams(
-		arguments,
-		args.ArgNameCurrency,
-		args.ArgNameBaseCurrency,
-		args.ArgNameActiveAt,
-		args.ArgNameStatuses,
-		args.ArgNameTransactionID,
-	)
-	if err != nil {
-		return
-	}
-	err = client.privateGet(
-		ctx,
-		endpointAirdrops,
-		params,
-		&result,
-	)
-	return
-}
-
 // GetAmountLocks gets the list of amount locks
 //
 // Requires the "Payment information" API key Access Right
@@ -1529,8 +1521,8 @@ func (client *Client) ClaimAirdrop(
 // Arguments:
 //  Currency(string)  // Optional. Currency code
 //  Active(bool)  // Optional. value showing whether the lock is active
-//  Limit(int64)  // Optional. Dafault is 100. Min is 0. Max is 1000
-//  Offset(int64)  // Optional. Default is 0. Min is 0
+//  Limit(int)  // Optional. Dafault is 100. Min is 0. Max is 1000
+//  Offset(int)  // Optional. Default is 0. Min is 0
 //  From(string)  // Optional. Interval initial value. As Datetime
 //  Till(string)  // Optional. Interval end value. As Datetime
 func (client *Client) GetAmountLocks(
@@ -1545,4 +1537,213 @@ func (client *Client) GetAmountLocks(
 		&result,
 	)
 	return
+}
+
+//////////////////
+// sub accounts //
+//////////////////
+
+// GetSubAccounts gets the list of sub-accounts
+//
+// Requires no API key Access Rights.
+//
+// https://api.exchange.cryptomkt.com/#get-sub-accounts-list
+func (client *Client) GetSubAccounts(
+	ctx context.Context,
+) (result []models.SubAccount, err error) {
+	var response struct {
+		Result []models.SubAccount `json:"result"`
+	}
+	err = client.privateGet(ctx, endpointSubAccountList, nil, &response)
+	return response.Result, err
+}
+
+// FreezeSubAccounts freezes sub-accounts listed and returnes a boolean indicating whether the sub-accounts where frozen
+//
+// A frozen wouldn't be able to:
+//
+// - login
+//
+// - withdraw funds
+//
+// - trade
+//
+// - complete pending orders
+//
+// - use API keys
+//
+//
+// For any sub-account listed, all orders will be canceled and all funds will be transferred form the Trading balance
+//
+// Requires no API key Access Rights. Requires to be authenticated
+//
+// https://api.exchange.cryptomkt.com/#freeze-sub-account
+//
+// Arguments:
+//  SubAccountIDs(...string)  // A list of sub account ids. Ids as hexadecimal code
+func (client *Client) FreezeSubAccounts(
+	ctx context.Context,
+	arguments ...args.Argument,
+) (result bool, err error) {
+	params, err := args.BuildParams(arguments, internal.ArgNameSubAccountIDs)
+	if err != nil {
+		return
+	}
+	response := models.BooleanResponse{}
+	err = client.post(ctx, endpointFreezeSubAccount, params, &response)
+	return response.Result, err
+}
+
+// ActivateSubAccounts  unfreezes sub-accounts listed and returns a bool indicating whether the sub accounts where activated
+//
+// Requires no API key Access Rights. Requires to be authenticated
+//
+// https://api.exchange.cryptomkt.com/#activate-sub-account
+//
+// Arguments:
+//  SubAccountIDs(...string)  // currency code of the sub-accounts to activate. Ids as hexadecimal code
+func (client *Client) ActivateSubAccounts(
+	ctx context.Context,
+	arguments ...args.Argument,
+) (result bool, err error) {
+	params, err := args.BuildParams(arguments, internal.ArgNameSubAccountIDs)
+	if err != nil {
+		return
+	}
+	response := models.BooleanResponse{}
+	err = client.post(ctx, endpointActivateSubAccount, params, &response)
+	return response.Result, err
+}
+
+// TransferFunds transfers funds from the super-account to a sub-account or from a sub-account to the super-account, and returns the transaction id
+//
+// Requires the "Withdraw cryptocurrencies" API key Access Right
+//
+// https://api.exchange.cryptomkt.com/#transfer-funds
+//
+// Arguments:
+//  SubAccountID(string)  // id of the sub-account to transfer with the super-account
+//  Amount(string)  // amount of funds to transfer
+//  Currency(string)  // currency of transfer
+//  TransferType(TransferTypeType)  // TransferToSubAccount or TransferFromSubAccount
+func (client *Client) TransferFunds(
+	ctx context.Context,
+	arguments ...args.Argument,
+) (result bool, err error) {
+	params, err := args.BuildParams(arguments, internal.ArgNameSubAccountID)
+	if err != nil {
+		return
+	}
+	response := models.BooleanResponse{}
+	err = client.post(ctx, endpointSubAccountTransferFunds, params, &response)
+	return response.Result, err
+}
+
+// GetACLSettings get a list of withdrawal settings for all sub-accounts or for the specified sub-accounts and returns A list of ACL settings for subaccounts
+//
+// Requires the "Payment information" API key Access Right
+//
+// https://api.exchange.cryptomkt.com/#get-acl-settings
+//
+// Arguments:
+//  SubAccountIDs(...string)  // A list of sub account ids. Ids as hexadecimal code
+func (client *Client) GetACLSettings(
+	ctx context.Context,
+	arguments ...args.Argument,
+) (result []models.ACLSettings, err error) {
+	params, err := args.BuildParams(arguments, internal.ArgNameSubAccountIDs)
+	if err != nil {
+		return
+	}
+	type Response struct {
+		Result []models.ACLSettings `json:"result"`
+	}
+	var response Response
+	err = client.privateGet(ctx, endpointSubaccountACLSettings, params, &response)
+	return response.Result, err
+}
+
+// ChangeACLSettings changes the ACL settings of subaccounts and returns a list of acl settings of the changed sub-accounts
+//
+// Disables or enables withdrawals for a sub-account
+//
+// Requires the "Payment information" API key Access Right
+//
+// https://api.exchange.cryptomkt.com/#change-acl-settings
+//
+// Arguments:
+//  SubAccountIDs(...string)  // currency code for transfering
+//  DepositAddressGenerationEnabled(bool)	// Optional. value indicaiting permission for deposits
+//  WithdrawEnabled(bool)  // Optional. value indicating permission for withdrawals
+//  Description(string)  // Optional. Textual description.
+//  CreatedAt(string)  // Optional. ACL creation time
+//  UpdatedAt(string)  // Optional. ACL update time
+func (client *Client) ChangeACLSettings(
+	ctx context.Context,
+	arguments ...args.Argument,
+) (result bool, err error) {
+	params, err := args.BuildParams(arguments, internal.ArgNameSubAccountID)
+	if err != nil {
+		return
+	}
+	response := models.BooleanResponse{}
+	err = client.post(ctx, endpointSubaccountACLSettings, params, &response)
+	return response.Result, err
+}
+
+// GetSubAccountBalances Get the non-zero balances of a sub-account
+//
+// Report will include the wallet and Trading balances.
+//
+// Works independent of account state.
+//
+// Requires the "Payment information" API key Access Right.
+//
+// https://api.exchange.cryptomkt.com/#get-sub-account-balance
+//
+// Arguments:
+//  SubAccountID(string)  // id of the sub-account to get the balances
+func (client *Client) GetSubAccountBalances(
+	ctx context.Context,
+	arguments ...args.Argument,
+) (result models.SubAccountBalances, err error) {
+	params, err := args.BuildParams(arguments, internal.ArgNameSubAccountID)
+	if err != nil {
+		return
+	}
+	err = client.privateGet(ctx, endpointSubaccountBalance+"/"+params[internal.ArgNameSubAccountID].(string), nil, &result)
+	return
+}
+
+// GetSubAccountCryptoAddress get the crypto address of the sub-account
+//
+// Requires the "Payment information" API key Access Right.
+//
+// https://api.exchange.cryptomkt.com/#get-sub-account-crypto-address
+//
+// Arguments:
+//  SubAccountID(string)  // the sub-account id
+//  Currency(string)  // the currency code of the crypto address
+func (client *Client) GetSubAccountCryptoAddress(
+	ctx context.Context,
+	arguments ...args.Argument,
+) (result string, err error) {
+	params, err := args.BuildParams(arguments, internal.ArgNameSubAccountID)
+	if err != nil {
+		return
+	}
+	type Result struct {
+		Address string `json:"address"`
+	}
+	type Response struct {
+		Result Result `json:"result"`
+	}
+	response := Response{}
+	err = client.privateGet(
+		ctx,
+		endpointSubaccountCryptoAddress+"/"+params[internal.ArgNameSubAccountID].(string)+"/"+params[internal.ArgNameCurrency].(string),
+		nil,
+		&response,
+	)
+	return response.Result.Address, err
 }

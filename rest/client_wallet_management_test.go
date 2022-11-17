@@ -10,7 +10,7 @@ import (
 
 func beforeEach() (*Client, context.Context) {
 	apiKeys := LoadKeys()
-	return NewClient(apiKeys.APIKey, apiKeys.APISecret, 0), context.Background()
+	return NewClient(apiKeys.APIKey, apiKeys.APISecret, 1000), context.Background()
 }
 
 func TestGetWalletBalances(t *testing.T) {
@@ -240,7 +240,9 @@ func TestTransferMoneyToAnotherUser(t *testing.T) {
 
 func TestGetTransactionHistory(t *testing.T) {
 	client, bg := beforeEach()
-	result, err := client.GetTransactionHistory(bg, args.Currencies([]string{"EOS"}))
+	transactionsList := []args.TransactionTypeType{args.TransactionTypeDeposit}
+	result, err := client.GetTransactionHistory(bg, args.TransactionTypes(transactionsList...))
+	fmt.Println(result)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -266,16 +268,4 @@ func TestOffchainAvailable(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-}
-
-func TestGetAirdrops(t *testing.T) {
-	// TODO
-}
-
-func TestCliamAirdrop(t *testing.T) {
-	// TODO
-}
-
-func TestGetAmountLock(t *testing.T) {
-	// TODO
 }

@@ -9,7 +9,6 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -44,7 +43,7 @@ func newHTTPClient(apiKey, apiSecret string, window int) httpclient {
 
 func (hclient httpclient) doRequest(cxt context.Context, method, endpoint string, params map[string]interface{}, public bool) (result []byte, err error) {
 	// build query
-	rawQuery := buildQuery(params)
+	rawQuery := args.BuildQuery(params)
 	// build request
 	var req *http.Request
 	if method == methodGet {
@@ -56,7 +55,6 @@ func (hclient httpclient) doRequest(cxt context.Context, method, endpoint string
 	if err != nil {
 		return nil, errors.New("CryptomarketSDKError: Can't build the request: " + err.Error())
 	}
-
 	req.Header.Add("User-Agent", "cryptomarket/go")
 	req.Header.Add("Content-type", "application/x-www-form-urlencoded")
 	// add auth header if is not a public call
@@ -98,38 +96,4 @@ func (hclient httpclient) buildCredential(httpMethod, method, query string) stri
 		str += (":" + strconv.FormatInt(int64(hclient.window), 10))
 	}
 	return "HS256 " + base64.StdEncoding.EncodeToString([]byte(str))
-}
-
-func buildQuery(params map[string]interface{}) string {
-	query := url.Values{}
-	for key, value := range params {
-		switch v := value.(type) {
-		case []string:
-			strs := strings.Join(v, ",")
-			query.Add(key, strs)
-		case string:
-			query.Add(key, v)
-		case int:
-			query.Add(key, strconv.Itoa(v))
-		case args.IdentifyByType:
-			query.Add(key, string(v))
-		case args.MarginType:
-			query.Add(key, string(v))
-		case args.OrderType:
-			query.Add(key, string(v))
-		case args.PeriodType:
-			query.Add(key, string(v))
-		case args.SideType:
-			query.Add(key, string(v))
-		case args.SortByType:
-			query.Add(key, string(v))
-		case args.SortType:
-			query.Add(key, string(v))
-		case args.TimeInForceType:
-			query.Add(key, string(v))
-		case args.AccountType:
-			query.Add(key, string(v))
-		}
-	}
-	return query.Encode()
 }

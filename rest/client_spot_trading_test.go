@@ -10,7 +10,7 @@ import (
 
 func TestGetSpotTradingBalance(t *testing.T) {
 	client, bg := beforeEach()
-	result, err := client.GetSpotTradingBalance(bg)
+	result, err := client.GetSpotTradingBalances(bg)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +43,7 @@ func TestGetAllActiveSpotOrders(t *testing.T) {
 
 func TestCreateOrder(t *testing.T) {
 	client, bg := beforeEach()
-	result, err := client.CreateSpotOrder(bg, args.Symbol("EOSETH"), args.Side(args.SideTypeSell), args.Quantity("0.01"), args.Price("8999"))
+	result, err := client.CreateSpotOrder(bg, args.Symbol("EOSETH"), args.Side(args.SideSell), args.Quantity("0.01"), args.Price("8999"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +131,7 @@ func TestGetAllTradingCommisions(t *testing.T) {
 
 func TestGetTradingCommision(t *testing.T) {
 	client, bg := beforeEach()
-	result, err := client.GetTradingCommission(bg, args.Symbol("eoseth"))
+	result, err := client.GetTradingCommissionOfSymbol(bg, args.Symbol("eoseth"))
 	if err != nil {
 		t.Fatal(err)
 	}

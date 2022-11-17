@@ -14,10 +14,11 @@ const (
 	// trading endpoints
 	endpointTradingBalance    = "spot/balance"
 	endpointOrder             = "spot/order"
+	endpointOrderList         = "spot/order/list"
 	endpointTradingCommission = "spot/fee"
 	// trading history endpoints
 	endpointOrderHistory = "spot/history/order"
-	endpointTradeHistory = "spot/history/trades"
+	endpointTradeHistory = "spot/history/trade"
 	// wallet management
 	endpointWalletBalance              = "wallet/balance"
 	endpointCryptoAdress               = "wallet/crypto/address"
@@ -26,11 +27,18 @@ const (
 	endpointCryptoAdressCheckMine      = "wallet/crypto/address/check-mine"
 	endpointCryptoWithdraw             = "wallet/crypto/withdraw"
 	endpointConvert                    = "wallet/convert"
-	endpointAccountTranser             = "wallet/transfer"
+	endpointWalletTranser              = "wallet/transfer"
 	endpointInternalWithdraw           = "wallet/internal/withdraw"
 	endpointTransactions               = "wallet/transactions"
 	endpointCryptoCheckOffchain        = "wallet/crypto/check-offchain-available"
 	endpointEstimateWithdrawFee        = "wallet/crypto/fee/estimate"
-	endpointAirdrops                   = "wallet/airdrops"
 	endpointAmountLocks                = "wallet/amount-locks"
+	// sub accounts
+	endpointSubAccountList          = "sub-account"
+	endpointFreezeSubAccount        = "sub-account/freeze"
+	endpointActivateSubAccount      = "sub-account/activate"
+	endpointSubAccountTransferFunds = "sub-account/transfer"
+	endpointSubaccountACLSettings   = "sub-account/acl"
+	endpointSubaccountBalance       = "sub-account/balance"
+	endpointSubaccountCryptoAddress = "sub-account/crypto/address"
 )
